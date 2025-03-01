@@ -1,7 +1,9 @@
 package com.fej1fun;
 
 import de.articdive.jnoise.core.api.functions.Interpolation;
+import de.articdive.jnoise.core.util.MathUtil;
 import de.articdive.jnoise.generators.noise_parameters.fade_functions.FadeFunction;
+import de.articdive.jnoise.generators.noisegen.opensimplex.SuperSimplexNoiseGenerator;
 import de.articdive.jnoise.modules.octavation.fractal_functions.FractalFunction;
 import de.articdive.jnoise.pipeline.JNoise;
 
@@ -32,7 +34,7 @@ public class Noise {
         if (temperatureMap != null) return temperatureMap;
 
         return temperatureMap = getPerlinNoiseMap(Interpolation.LINEAR, FadeFunction.QUINTIC_POLY, FractalFunction.FBM,
-                4, 2.5f, 0.575f, 1,1);
+                4, 10f, 0.25f, 1,1);
     }
 
     public double[][] getNoisePrecipitationMap() {
@@ -45,8 +47,20 @@ public class Noise {
     public double[][] getNoiseElevationMap() {
         if (elevationMap != null) return elevationMap;
 
-        return elevationMap = getPerlinNoiseMap(Interpolation.COSINE, FadeFunction.QUADRATIC_PIECEWISE, FractalFunction.FBM,
-                4, 2.35f, 0.25f,1.1f, 1.9f);
+        double[][] noiseMap = new double[width][height];
+
+        JNoise generator = JNoise.newBuilder()
+                .superSimplex(SuperSimplexNoiseGenerator.newBuilder().setSeed(seed).build())
+                .addModifier(v -> (v + 1) / 2.0)
+                .scale(scale)
+                .clamp(0,1)
+                .octavate((int) MathUtil.log2(Math.sqrt(width*height)), 2.01f, 0.5f, FractalFunction.FBM, true)
+                .build();
+        for (int y = 0; y < width; y++)
+            for (int x = 0; x < height; x++)
+                noiseMap[x][y] = Math.pow(generator.evaluateNoise(x, y) * 1.3, 1.95);
+
+        return elevationMap = noiseMap;
     }
 
     public double[][] getPerlinNoiseMap(Interpolation inter,
@@ -67,11 +81,10 @@ public class Noise {
                 .clamp(0,1)
                 .octavate(octaves, gain, lacunarity, fractal, true)
                 .build();
-        for (int y = 0; y < width; y++) {
-            for (int x = 0; x < height; x++) {
+        for (int y = 0; y < width; y++)
+            for (int x = 0; x < height; x++)
                 noiseMap[x][y] = Math.pow(generator.evaluateNoise(x, y) * fudge_factor, pow);
-            }
-        }
+
         return noiseMap;
     }
 
