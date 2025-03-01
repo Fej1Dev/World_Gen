@@ -1,4 +1,4 @@
-package com.fej1fun;
+package com.fej1fun.util;
 
 import javax.swing.*;
 import java.awt.*;
