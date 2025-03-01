@@ -7,8 +7,8 @@ import de.articdive.jnoise.pipeline.JNoise;
 
 public class Noise {
     final float scale;
-    final int width;
-    final int height;
+    public final int width;
+    public final int height;
 
     private long seed;
 
@@ -73,5 +73,13 @@ public class Noise {
             }
         }
         return noiseMap;
+    }
+
+    public void setSeed(long seed) {
+        this.seed = seed;
+
+        this.temperatureMap = null;
+        this.precipitationMap = null;
+        this.elevationMap = null;
     }
 }
